@@ -46,6 +46,14 @@ public class MysqlTableMetaCache extends AbstractTableMetaCache {
 
     private KeywordChecker keywordChecker = KeywordCheckerFactory.getKeywordChecker(JdbcConstants.MYSQL);
 
+    /**
+     * 缓存的key值就是resourceId + 表名  不过传入的这个表名是 有 `` 号的 需要去除 同时需要考虑是否大小写敏感
+     *
+     * @param connection 数据库连接
+     * @param tableName  表名
+     * @param resourceId 资源id
+     * @return
+     */
     @Override
     protected String getCacheKey(Connection connection, String tableName, String resourceId) {
         StringBuilder cacheKey = new StringBuilder(resourceId);
@@ -81,6 +89,7 @@ public class MysqlTableMetaCache extends AbstractTableMetaCache {
     protected TableMeta fetchSchema(Connection connection, String tableName) throws SQLException {
         String sql = "SELECT * FROM " + keywordChecker.checkAndReplace(tableName) + " LIMIT 1";
         try (Statement stmt = connection.createStatement();
+             /** 可以通过ResultSet 获取表元数据: 模式名称(一般为空) 目录名称 表名, 通过Connection获取表的元数据 **/
              ResultSet rs = stmt.executeQuery(sql)) {
             return resultSetMetaToSchema(rs.getMetaData(), connection.getMetaData());
         }
